@@ -1,0 +1,23 @@
+{
+  "name": "mongo_movies",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "concurrently \"mongod --dbpath=data\" \"node app.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Miguel S",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "bootstrap": "^3.3.6",
+    "bootstrap-material-design": "^0.5.9",
+    "concurrently": "^2.1.0",
+    "express": "^4.13.4",
+    "jquery": "^2.2.4",
+    "material-design-icons": "^2.2.3",
+    "mongodb": "^2.1.20",
+    "pug": "^2.0.0-alpha8"
+  }
+}

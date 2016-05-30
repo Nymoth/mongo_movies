@@ -1,0 +1,150 @@
+extends ./layout.pug
+
+block scripts
+  script(type="text/javascript").
+    $(document).ready(function() {
+      
+      var $results = $('#results')
+        , $newName = $('#newName');
+
+      function rowBindings() {
+        var $row = $(this)
+          , id = $row.data('id');
+
+
+        $row.find('.btnEdit').click(function() {
+          var $this = $(this)
+            , $name = $row.find('.name')
+            , oldName = $name.text()
+            , $newNameWrapper = $('<div class="btn-group-sm">')
+            , $newNameInput = $('<input type="text" class="form-control pull-left" value="' + oldName + '">')
+            , $newNameSubmit = $('<span class="btn btn-fab btn-success" title="Submit" data-placement="left"><i class="material-icons">check</i></span>').click(function() {
+                if (!$(this).attr('disabled')) {
+                  var newName = $newNameInput.val().trim();
+
+                  if (newName.length > 0 && newName !== oldName) {
+                    $row.find('.btn').attr('disabled', 'disabled');
+                    $.ajax({
+                      method: 'PUT'
+                    , url: '/' + id
+                    , data: {
+                        name: newName
+                      }
+                    }).done(function(res) {
+                      var json = JSON.parse(res);
+                      if (!json.err) {
+                        $name.html(newName);
+                        $newNameSubmit.remove();
+                      }
+                    }).always(function() {
+                      $row.find('.btn').removeAttr('disabled');
+                    });
+                  }
+                }
+              })
+            , $newNameCancel = $('<span class="btn btn-fab btn-danger" title="Cancel" data-placement="right"><i class="material-icons">close</i></span>').click(function() {
+                if (!$(this).attr('disabled')) {
+                  $name.html(oldName);
+                  $row.find('.btn').removeAttr('disabled');
+                }
+              });
+
+          if (!$this.attr('disabled')) {
+            $this.attr('disabled', 'disabled');
+
+            $name.html('');
+            $newNameWrapper.appendTo($name);
+            $newNameInput.appendTo($newNameWrapper).css('width', ($name.width() - 100) + 'px').focus().select();
+            $newNameSubmit.insertAfter($newNameInput).tooltip();
+            $newNameCancel.insertAfter($newNameSubmit).tooltip();
+          }
+
+        });
+
+        $row.find('.btnDelete').click(function() {
+          if (!$(this).attr('disabled')) {
+            $row.find('.btn').attr('disabled', 'disabled');
+
+            if (confirm('Are you sure?')) {
+              $.ajax({
+                method: 'DELETE'
+              , url: '/' + id
+              }).done(function(res) {
+                var json = JSON.parse(res);
+                if (!json.err) {
+                  $row.remove();
+                }
+              }).always(function() {
+                $row.find('.btn').removeAttr('disabled');
+              });
+            } else {
+              $row.find('.btn').removeAttr('disabled');
+            }
+          }
+        });
+      }
+
+      $('[data-toggle="tooltip"]').tooltip();
+
+      $results.find('tr[data-id]').map(rowBindings);
+
+      $('#btnCreate').click(function() {
+        var $this = $(this)
+          , name = $newName.val().trim();
+
+        if (name.length > 0) {
+          $newName.val('');
+          $this.attr('disabled', 'disabled');
+
+          $.post('/', {
+            name: name
+          }, function(res) {
+            var json = JSON.parse(res);
+            $this.removeAttr('disabled');
+            if (!json.err) {
+              var id = json.data._id
+                , $row = $('<tr data-id="' + id + '">')
+                , $name = $('<td class="name">' + name + '</td>')
+                , $controls = $('<td class="btn-group-sm text-right"></td>')
+                , $btnEdit = $('<span class="btn btn-fab btn-info btnEdit" title="Edit" data-placement="left"><i class="material-icons">edit</i></span>')
+                , $btnDelete = $('<span class="btn btn-fab btn-danger btnDelete" title="Delete" data-placement="right"><i class="material-icons">delete</i></span>')
+
+              rowBindings.call(
+                $row.append(
+                  $name,
+                  $controls.append(
+                    $btnEdit.tooltip(),
+                    $btnDelete.tooltip()
+                  )
+                ).insertBefore($this.parents('tr'))
+              );
+            } 
+          });          
+        }
+      });
+
+    });
+
+block content
+  table#results.table.table-hover
+    thead
+      tr
+        th Name
+        th
+    tbody
+      each movie in results
+        - var id = movie._id.toString().replace('"', '')
+        tr(data-id=id)
+          td.name= movie.name
+          td.btn-group-sm.text-right
+            span.btn.btn-fab.btn-info.btnEdit(title="Edit", data-toggle="tooltip", data-placement="left")
+              i.material-icons edit
+            span.btn.btn-fab.btn-danger.btnDelete(title="Delete", data-toggle="tooltip", data-placement="right")
+              i.material-icons delete
+      tr
+        td
+           input#newName.form-control(type="text", placeholder="Name")
+        td.btn-group-sm.text-right
+          span#btnCreate.btn.btn-fab.btn-success(title="Create", data-toggle="tooltip", data-placement="right")
+              i.material-icons add
+
